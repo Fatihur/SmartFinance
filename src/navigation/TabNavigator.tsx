@@ -7,7 +7,6 @@ import { MainTabParamList } from '../types';
 // Import screens
 import HomeScreen from '../screens/HomeScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
-import HistoryScreen from '../screens/HistoryScreen';
 import StatsScreen from '../screens/StatsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -26,9 +25,6 @@ const TabNavigator: React.FC = () => {
             case 'AddTransaction':
               iconName = 'mic';
               break;
-            case 'History':
-              iconName = 'history';
-              break;
             case 'Stats':
               iconName = 'bar-chart';
               break;
@@ -43,15 +39,22 @@ const TabNavigator: React.FC = () => {
         tabBarStyle: {
           backgroundColor: COLORS.surface,
           borderTopWidth: 1,
-          borderTopColor: COLORS.border,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 70,
+          borderTopColor: COLORS.cardBorder,
+          paddingBottom: 10,
+          paddingTop: 10,
+          height: 75,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: 2,
+          marginBottom: 2,
         },
         headerShown: false,
         tabBarHideOnKeyboard: true,
@@ -61,39 +64,38 @@ const TabNavigator: React.FC = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: 'Beranda',
         }}
       />
       <Tab.Screen
         name="AddTransaction"
         component={AddTransactionScreen}
         options={{
-          tabBarLabel: 'Add',
-          tabBarIconStyle: {
-            backgroundColor: COLORS.primary,
-            borderRadius: 25,
-            width: 50,
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 10,
-          },
-          tabBarActiveTintColor: COLORS.surface,
-          tabBarInactiveTintColor: COLORS.surface,
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{
-          tabBarLabel: 'History',
+          tabBarLabel: 'Mic',
+          tabBarIcon: ({ focused, color, size }) => (
+            <View style={{
+              backgroundColor: COLORS.primary,
+              borderRadius: 30,
+              width: 60,
+              height: 60,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 15,
+              borderWidth: 3,
+              borderColor: COLORS.surface,
+            }}>
+              <Icon name="mic" size={28} color={COLORS.surface} />
+            </View>
+          ),
+          tabBarActiveTintColor: COLORS.primary,
+          tabBarInactiveTintColor: COLORS.primary,
         }}
       />
       <Tab.Screen
         name="Stats"
         component={StatsScreen}
         options={{
-          tabBarLabel: 'Stats',
+          tabBarLabel: 'Statistik',
         }}
       />
     </Tab.Navigator>

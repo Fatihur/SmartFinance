@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { TransactionSummary } from '../types';
 import { formatCurrency } from '../utils';
@@ -10,16 +10,18 @@ interface SummaryCardProps {
   period: string;
 }
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const SummaryCard: React.FC<SummaryCardProps> = ({ summary, period }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Summary</Text>
+        <Text style={styles.title}>Ringkasan</Text>
         <Text style={styles.period}>{period}</Text>
       </View>
 
       <View style={styles.balanceSection}>
-        <Text style={styles.balanceLabel}>Balance</Text>
+        <Text style={styles.balanceLabel}>Saldo</Text>
         <Text style={[
           styles.balanceAmount,
           { color: summary.balance >= 0 ? COLORS.income : COLORS.expense }
@@ -34,7 +36,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ summary, period }) => {
             <Icon name="trending-up" size={20} color={COLORS.income} />
           </View>
           <View style={styles.statText}>
-            <Text style={styles.statLabel}>Income</Text>
+            <Text style={styles.statLabel}>Pemasukan</Text>
             <Text style={[styles.statAmount, { color: COLORS.income }]}>
               {formatCurrency(summary.totalIncome)}
             </Text>
@@ -46,7 +48,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ summary, period }) => {
             <Icon name="trending-down" size={20} color={COLORS.expense} />
           </View>
           <View style={styles.statText}>
-            <Text style={styles.statLabel}>Expenses</Text>
+            <Text style={styles.statLabel}>Pengeluaran</Text>
             <Text style={[styles.statAmount, { color: COLORS.expense }]}>
               {formatCurrency(summary.totalExpense)}
             </Text>
@@ -60,14 +62,11 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ summary, period }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.surface,
-    margin: 16,
-    padding: 20,
+    margin: screenWidth > 400 ? 20 : 16,
+    padding: screenWidth > 400 ? 24 : 20,
     borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   header: {
     flexDirection: 'row',
@@ -98,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: screenWidth > 400 ? 36 : 32,
     fontWeight: '700',
   },
   statsContainer: {

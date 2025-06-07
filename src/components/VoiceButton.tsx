@@ -13,6 +13,8 @@ interface VoiceButtonProps {
 const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = false }) => {
   const [isListening, setIsListening] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [countdown, setCountdown] = useState(3);
   const scaleAnim = new Animated.Value(1);
 
   const startListening = async () => {
@@ -20,7 +22,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
       // Request permissions
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please grant microphone permission to use voice input.');
+        Alert.alert('Izin Diperlukan', 'Mohon berikan izin mikrofon untuk menggunakan input suara.');
         return;
       }
 
@@ -54,16 +56,31 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
       );
       setRecording(newRecording);
 
-      // Auto-stop after max duration
-      setTimeout(() => {
+      // Start countdown
+      setCountdown(3);
+      const countdownInterval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            stopListening();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Auto-stop after 3 seconds of silence
+      const timer = setTimeout(() => {
+        clearInterval(countdownInterval);
         if (isListening) {
           stopListening();
         }
-      }, VOICE_CONFIG.MAX_DURATION);
+      }, 3000); // 3 seconds
+      setSilenceTimer(timer);
 
     } catch (error) {
       console.error('Error starting voice recording:', error);
-      Alert.alert('Error', 'Failed to start voice recording. Please try again.');
+      Alert.alert('Kesalahan', 'Gagal memulai perekaman suara. Silakan coba lagi.');
       setIsListening(false);
     }
   };
@@ -73,6 +90,12 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
       setIsListening(false);
       scaleAnim.stopAnimation();
       scaleAnim.setValue(1);
+
+      // Clear silence timer
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
 
       if (recording) {
         await recording.stopAndUnloadAsync();
@@ -85,7 +108,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
       }
     } catch (error) {
       console.error('Error stopping voice recording:', error);
-      Alert.alert('Error', 'Failed to process voice recording.');
+      Alert.alert('Kesalahan', 'Gagal memproses perekaman suara.');
     }
   };
 
@@ -141,16 +164,16 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
       </TouchableOpacity>
       
       <Text style={styles.instruction}>
-        {isListening 
-          ? 'Listening... Tap to stop' 
-          : 'Tap the microphone button and say something like:'
+        {isListening
+          ? `Mendengarkan... ${countdown}s`
+          : 'Tekan tombol mikrofon dan katakan sesuatu seperti:'
         }
       </Text>
-      
+
       {!isListening && (
         <View style={styles.examples}>
-          <Text style={styles.exampleText}>"Spent $12.50 on lunch"</Text>
-          <Text style={styles.exampleText}>"Received $500 salary"</Text>
+          <Text style={styles.exampleText}>"Beli makan siang 25 ribu"</Text>
+          <Text style={styles.exampleText}>"Terima gaji 5 juta"</Text>
         </View>
       )}
     </View>
@@ -169,11 +192,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
     marginBottom: 16,
   },
   buttonListening: {
@@ -181,7 +199,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: COLORS.textSecondary,
-    elevation: 2,
   },
   instruction: {
     fontSize: 16,

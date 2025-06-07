@@ -94,11 +94,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 4,
     borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   leftSection: {
     flex: 1,

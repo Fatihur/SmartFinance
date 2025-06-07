@@ -22,10 +22,10 @@ const StatsScreen: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('month');
 
   const periods = [
-    { key: 'day' as PeriodType, label: 'Today' },
-    { key: 'week' as PeriodType, label: 'Week' },
-    { key: 'month' as PeriodType, label: 'Month' },
-    { key: 'all' as PeriodType, label: 'All' },
+    { key: 'day' as PeriodType, label: 'Hari Ini' },
+    { key: 'week' as PeriodType, label: 'Minggu' },
+    { key: 'month' as PeriodType, label: 'Bulan' },
+    { key: 'all' as PeriodType, label: 'Semua' },
   ];
 
   const transactions = getTransactionsByPeriod(selectedPeriod);
@@ -102,11 +102,11 @@ const StatsScreen: React.FC = () => {
 
   const getPeriodLabel = (period: PeriodType): string => {
     switch (period) {
-      case 'day': return 'Today';
-      case 'week': return 'This Week';
-      case 'month': return 'This Month';
-      case 'all': return 'All Time';
-      default: return 'This Month';
+      case 'day': return 'Hari Ini';
+      case 'week': return 'Minggu Ini';
+      case 'month': return 'Bulan Ini';
+      case 'all': return 'Semua Waktu';
+      default: return 'Bulan Ini';
     }
   };
 
@@ -115,8 +115,8 @@ const StatsScreen: React.FC = () => {
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Statistics</Text>
-          <Text style={styles.headerSubtitle}>Financial insights and trends</Text>
+          <Text style={styles.headerTitle}>Statistik</Text>
+          <Text style={styles.headerSubtitle}>Wawasan dan tren keuangan</Text>
         </View>
 
         {/* Period Filter */}
@@ -148,15 +148,15 @@ const StatsScreen: React.FC = () => {
         <View style={styles.summaryContainer}>
           <View style={styles.summaryCard}>
             <Icon name="trending-up" size={24} color={COLORS.income} />
-            <Text style={styles.summaryLabel}>Total Income</Text>
+            <Text style={styles.summaryLabel}>Total Pemasukan</Text>
             <Text style={[styles.summaryAmount, { color: COLORS.income }]}>
               {formatCurrency(summary.totalIncome)}
             </Text>
           </View>
-          
+
           <View style={styles.summaryCard}>
             <Icon name="trending-down" size={24} color={COLORS.expense} />
-            <Text style={styles.summaryLabel}>Total Expense</Text>
+            <Text style={styles.summaryLabel}>Total Pengeluaran</Text>
             <Text style={[styles.summaryAmount, { color: COLORS.expense }]}>
               {formatCurrency(summary.totalExpense)}
             </Text>
@@ -166,7 +166,7 @@ const StatsScreen: React.FC = () => {
         {/* Income by Category */}
         {incomeStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Income by Category</Text>
+            <Text style={styles.sectionTitle}>Pemasukan per Kategori</Text>
             <View style={styles.categoryContainer}>
               {incomeStats.map(item => renderCategoryBar(item, 'income'))}
             </View>
@@ -176,7 +176,7 @@ const StatsScreen: React.FC = () => {
         {/* Expenses by Category */}
         {expenseStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Expenses by Category</Text>
+            <Text style={styles.sectionTitle}>Pengeluaran per Kategori</Text>
             <View style={styles.categoryContainer}>
               {expenseStats.map(item => renderCategoryBar(item, 'expense'))}
             </View>
@@ -186,7 +186,7 @@ const StatsScreen: React.FC = () => {
         {/* Monthly Trend */}
         {monthlyTrend.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Monthly Trend</Text>
+            <Text style={styles.sectionTitle}>Tren Bulanan</Text>
             <View style={styles.trendContainer}>
               {monthlyTrend.map(([month, data]) => (
                 <View key={month} style={styles.trendItem}>
@@ -229,11 +229,11 @@ const StatsScreen: React.FC = () => {
             <View style={styles.trendLegend}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: COLORS.income }]} />
-                <Text style={styles.legendText}>Income</Text>
+                <Text style={styles.legendText}>Pemasukan</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: COLORS.expense }]} />
-                <Text style={styles.legendText}>Expense</Text>
+                <Text style={styles.legendText}>Pengeluaran</Text>
               </View>
             </View>
           </View>
@@ -242,9 +242,9 @@ const StatsScreen: React.FC = () => {
         {transactions.length === 0 && (
           <View style={styles.emptyContainer}>
             <Icon name="bar-chart" size={64} color={COLORS.textSecondary} />
-            <Text style={styles.emptyTitle}>No data to display</Text>
+            <Text style={styles.emptyTitle}>Tidak ada data untuk ditampilkan</Text>
             <Text style={styles.emptySubtitle}>
-              Add some transactions to see your financial statistics
+              Tambahkan beberapa transaksi untuk melihat statistik keuangan Anda
             </Text>
           </View>
         )}
@@ -260,6 +260,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    paddingBottom: 90, // Space for bottom navigation
   },
   header: {
     padding: 20,
@@ -312,11 +313,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   summaryLabel: {
     fontSize: 12,
@@ -334,11 +332,8 @@ const styles = StyleSheet.create({
     marginTop: 0,
     padding: 20,
     borderRadius: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   sectionTitle: {
     fontSize: 18,

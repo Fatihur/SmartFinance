@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useApp } from '../store/AppContext';
@@ -16,16 +17,18 @@ import { COLORS } from '../constants';
 
 type PeriodType = 'day' | 'week' | 'month' | 'all';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const HomeScreen: React.FC = () => {
   const { state, getTransactionSummary, getTransactionsByPeriod, deleteTransaction } = useApp();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('month');
   const [refreshing, setRefreshing] = useState(false);
 
   const periods = [
-    { key: 'day' as PeriodType, label: 'Day' },
-    { key: 'week' as PeriodType, label: 'Week' },
-    { key: 'month' as PeriodType, label: 'Month' },
-    { key: 'all' as PeriodType, label: 'All' },
+    { key: 'day' as PeriodType, label: 'Hari Ini' },
+    { key: 'week' as PeriodType, label: 'Minggu Ini' },
+    { key: 'month' as PeriodType, label: 'Bulan Ini' },
+    { key: 'all' as PeriodType, label: 'Semua' },
   ];
 
   const transactions = getTransactionsByPeriod(selectedPeriod);
@@ -39,12 +42,12 @@ const HomeScreen: React.FC = () => {
 
   const handleDeleteTransaction = (transactionId: string) => {
     Alert.alert(
-      'Delete Transaction',
-      'Are you sure you want to delete this transaction?',
+      'Hapus Transaksi',
+      'Apakah Anda yakin ingin menghapus transaksi ini?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Batal', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Hapus',
           style: 'destructive',
           onPress: () => deleteTransaction(transactionId),
         },
@@ -55,15 +58,15 @@ const HomeScreen: React.FC = () => {
   const getPeriodLabel = (period: PeriodType): string => {
     switch (period) {
       case 'day':
-        return 'Today';
+        return 'Hari Ini';
       case 'week':
-        return 'This Week';
+        return 'Minggu Ini';
       case 'month':
-        return 'This Month';
+        return 'Bulan Ini';
       case 'all':
-        return 'All Time';
+        return 'Semua Waktu';
       default:
-        return 'This Month';
+        return 'Bulan Ini';
     }
   };
 
@@ -78,7 +81,7 @@ const HomeScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>SmartFinance</Text>
-          <Text style={styles.headerSubtitle}>Track your finances with voice</Text>
+          <Text style={styles.headerSubtitle}>Kelola keuangan dengan suara</Text>
         </View>
 
         {/* Period Filter */}
@@ -112,30 +115,30 @@ const HomeScreen: React.FC = () => {
         {/* Recent Transactions */}
         <View style={styles.transactionsSection}>
           <View style={styles.transactionsHeader}>
-            <Text style={styles.transactionsTitle}>Recent Transactions</Text>
+            <Text style={styles.transactionsTitle}>Transaksi Terbaru</Text>
             {transactions.length > 0 && (
               <Text style={styles.transactionsCount}>
-                {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+                {transactions.length} transaksi
               </Text>
             )}
           </View>
 
           {state.isLoading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading...</Text>
+              <Text style={styles.loadingText}>Memuat...</Text>
             </View>
           ) : transactions.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Icon name="receipt-long" size={64} color={COLORS.textSecondary} />
-              <Text style={styles.emptyTitle}>Start by adding a transaction</Text>
+              <Text style={styles.emptyTitle}>Mulai dengan menambah transaksi</Text>
               <Text style={styles.emptySubtitle}>
-                No transactions yet
+                Belum ada transaksi
               </Text>
               <Text style={styles.emptyHint}>
-                Tap the microphone button and say something like:
+                Tekan tombol mikrofon dan katakan sesuatu seperti:
               </Text>
-              <Text style={styles.exampleText}>"Spent $12.50 on lunch"</Text>
-              <Text style={styles.exampleText}>"Received $500 salary"</Text>
+              <Text style={styles.exampleText}>"Beli makan siang 25 ribu"</Text>
+              <Text style={styles.exampleText}>"Terima gaji 5 juta"</Text>
             </View>
           ) : (
             <View style={styles.transactionsList}>
@@ -150,10 +153,10 @@ const HomeScreen: React.FC = () => {
               {transactions.length > 10 && (
                 <View style={styles.moreTransactions}>
                   <Text style={styles.moreTransactionsText}>
-                    +{transactions.length - 10} more transactions
+                    +{transactions.length - 10} transaksi lainnya
                   </Text>
                   <Text style={styles.moreTransactionsHint}>
-                    Go to History tab to see all
+                    Lihat semua di tab Statistik
                   </Text>
                 </View>
               )}
@@ -172,23 +175,24 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    paddingBottom: 90, // Space for bottom navigation
   },
   header: {
-    padding: 20,
-    paddingTop: 40,
+    padding: screenWidth > 400 ? 24 : 20,
+    paddingTop: screenWidth > 400 ? 50 : 40,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: screenWidth > 400 ? 32 : 28,
     fontWeight: '700',
     color: COLORS.text,
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
+    fontSize: screenWidth > 400 ? 18 : 16,
     color: COLORS.textSecondary,
   },
   periodContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: screenWidth > 400 ? 20 : 16,
     marginBottom: 8,
   },
   periodButton: {

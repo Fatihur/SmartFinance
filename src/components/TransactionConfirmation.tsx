@@ -42,12 +42,12 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
 
   const handleConfirm = () => {
     if (editedTransaction.amount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount greater than 0.');
+      Alert.alert('Jumlah Tidak Valid', 'Mohon masukkan jumlah yang valid lebih dari 0.');
       return;
     }
 
     if (!editedTransaction.description.trim()) {
-      Alert.alert('Missing Description', 'Please enter a description for this transaction.');
+      Alert.alert('Deskripsi Kosong', 'Mohon masukkan deskripsi untuk transaksi ini.');
       return;
     }
 
@@ -74,7 +74,7 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Confirm Transaction</Text>
+            <Text style={styles.title}>Konfirmasi Transaksi</Text>
             <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
               <Icon name="close" size={24} color={COLORS.textSecondary} />
             </TouchableOpacity>
@@ -83,13 +83,13 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
           <ScrollView style={styles.content}>
             {/* Original Voice Text */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Original Voice Input:</Text>
+              <Text style={styles.sectionTitle}>Input Suara Asli:</Text>
               <Text style={styles.originalText}>"{originalText}"</Text>
             </View>
 
             {/* Confidence Score */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Parsing Confidence:</Text>
+              <Text style={styles.sectionTitle}>Tingkat Kepercayaan:</Text>
               <View style={styles.confidenceContainer}>
                 <View style={[
                   styles.confidenceBar,
@@ -103,7 +103,7 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
 
             {/* Transaction Type */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Type:</Text>
+              <Text style={styles.sectionTitle}>Jenis:</Text>
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[
@@ -123,7 +123,7 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
                   <Text style={[
                     styles.typeButtonText,
                     editedTransaction.type === 'income' && styles.typeButtonTextActive
-                  ]}>Income</Text>
+                  ]}>Pemasukan</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -144,14 +144,14 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
                   <Text style={[
                     styles.typeButtonText,
                     editedTransaction.type === 'expense' && styles.typeButtonTextActive
-                  ]}>Expense</Text>
+                  ]}>Pengeluaran</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Amount */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Amount:</Text>
+              <Text style={styles.sectionTitle}>Jumlah:</Text>
               <TextInput
                 style={styles.amountInput}
                 value={editedTransaction.amount.toString()}
@@ -160,7 +160,7 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
                   setEditedTransaction({ ...editedTransaction, amount });
                 }}
                 keyboardType="numeric"
-                placeholder="Enter amount"
+                placeholder="Masukkan jumlah"
               />
               <Text style={styles.amountDisplay}>
                 {formatCurrency(editedTransaction.amount)}
@@ -169,7 +169,7 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
 
             {/* Category */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Category:</Text>
+              <Text style={styles.sectionTitle}>Kategori:</Text>
               <TouchableOpacity
                 style={styles.categoryButton}
                 onPress={() => setShowCategoryPicker(true)}
@@ -181,12 +181,12 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
 
             {/* Description */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Description:</Text>
+              <Text style={styles.sectionTitle}>Deskripsi:</Text>
               <TextInput
                 style={styles.descriptionInput}
                 value={editedTransaction.description}
                 onChangeText={(text) => setEditedTransaction({ ...editedTransaction, description: text })}
-                placeholder="Enter description"
+                placeholder="Masukkan deskripsi"
                 multiline
                 numberOfLines={3}
               />
@@ -196,10 +196,10 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
           {/* Action Buttons */}
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>Batal</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-              <Text style={styles.confirmButtonText}>Confirm</Text>
+              <Text style={styles.confirmButtonText}>Konfirmasi</Text>
             </TouchableOpacity>
           </View>
 
@@ -212,7 +212,7 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
           >
             <View style={styles.pickerOverlay}>
               <View style={styles.pickerContainer}>
-                <Text style={styles.pickerTitle}>Select Category</Text>
+                <Text style={styles.pickerTitle}>Pilih Kategori</Text>
                 <ScrollView>
                   {categories.map((category) => (
                     <TouchableOpacity
@@ -242,28 +242,30 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   container: {
     backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    margin: 20,
-    maxHeight: '90%',
-    width: '90%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '85%',
+    width: '100%',
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
+    paddingTop: 24,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: COLORS.cardBorder,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
     color: COLORS.text,
   },
   closeButton: {
@@ -373,15 +375,19 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     padding: 20,
+    paddingTop: 16,
     gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.cardBorder,
   },
   cancelButton: {
     flex: 1,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.cardBorder,
     alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
   cancelButtonText: {
     fontSize: 16,
@@ -391,7 +397,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     flex: 1,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
   },

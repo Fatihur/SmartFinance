@@ -1,18 +1,19 @@
 export const COLORS = {
-  primary: '#2196F3',
-  primaryDark: '#1976D2',
-  secondary: '#4CAF50',
-  accent: '#FF9800',
-  background: '#F5F5F5',
+  primary: '#6366F1',
+  primaryDark: '#4F46E5',
+  secondary: '#10B981',
+  accent: '#F59E0B',
+  background: '#F8FAFC',
   surface: '#FFFFFF',
-  text: '#212121',
-  textSecondary: '#757575',
-  error: '#F44336',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  income: '#4CAF50',
-  expense: '#F44336',
-  border: '#E0E0E0',
+  text: '#1E293B',
+  textSecondary: '#64748B',
+  error: '#EF4444',
+  success: '#10B981',
+  warning: '#F59E0B',
+  income: '#10B981',
+  expense: '#EF4444',
+  border: '#E2E8F0',
+  cardBorder: '#F1F5F9',
 };
 
 export const CATEGORIES = {
@@ -42,7 +43,7 @@ export const STORAGE_KEYS = {
 };
 
 export const API_CONFIG = {
-  GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+  GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
   // Ganti dengan API key Gemini Anda
   GEMINI_API_KEY: 'AIzaSyBrVS_9XFEykXFA7iydEmZhqNqpXCdAzN8',
 };
