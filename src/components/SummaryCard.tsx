@@ -1,0 +1,136 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { TransactionSummary } from '../types';
+import { formatCurrency } from '../utils';
+import { COLORS } from '../constants';
+
+interface SummaryCardProps {
+  summary: TransactionSummary;
+  period: string;
+}
+
+const SummaryCard: React.FC<SummaryCardProps> = ({ summary, period }) => {
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Summary</Text>
+        <Text style={styles.period}>{period}</Text>
+      </View>
+
+      <View style={styles.balanceSection}>
+        <Text style={styles.balanceLabel}>Balance</Text>
+        <Text style={[
+          styles.balanceAmount,
+          { color: summary.balance >= 0 ? COLORS.income : COLORS.expense }
+        ]}>
+          {formatCurrency(summary.balance)}
+        </Text>
+      </View>
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <View style={styles.statIcon}>
+            <Icon name="trending-up" size={20} color={COLORS.income} />
+          </View>
+          <View style={styles.statText}>
+            <Text style={styles.statLabel}>Income</Text>
+            <Text style={[styles.statAmount, { color: COLORS.income }]}>
+              {formatCurrency(summary.totalIncome)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.statItem}>
+          <View style={styles.statIcon}>
+            <Icon name="trending-down" size={20} color={COLORS.expense} />
+          </View>
+          <View style={styles.statText}>
+            <Text style={styles.statLabel}>Expenses</Text>
+            <Text style={[styles.statAmount, { color: COLORS.expense }]}>
+              {formatCurrency(summary.totalExpense)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: COLORS.surface,
+    margin: 16,
+    padding: 20,
+    borderRadius: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  period: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  balanceSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  balanceAmount: {
+    fontSize: 32,
+    fontWeight: '700',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statText: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  statAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+export default SummaryCard;
