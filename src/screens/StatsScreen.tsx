@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useApp } from '../store/AppContext';
@@ -15,17 +16,20 @@ import { COLORS, CATEGORIES } from '../constants';
 
 type PeriodType = 'day' | 'week' | 'month' | 'all';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
+const isLargeScreen = screenWidth > 400;
+const paddingHorizontal = isLargeScreen ? 20 : 16;
+const paddingVertical = isLargeScreen ? 16 : 12;
 
 const StatsScreen: React.FC = () => {
   const { getTransactionsByPeriod, getTransactionSummary } = useApp();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('month');
 
   const periods = [
-    { key: 'day' as PeriodType, label: 'Hari Ini' },
-    { key: 'week' as PeriodType, label: 'Minggu' },
-    { key: 'month' as PeriodType, label: 'Bulan' },
-    { key: 'all' as PeriodType, label: 'Semua' },
+    { key: 'day' as PeriodType, label: 'Day' },
+    { key: 'week' as PeriodType, label: 'Week' },
+    { key: 'month' as PeriodType, label: 'Month' },
+    { key: 'all' as PeriodType, label: 'All' },
   ];
 
   const transactions = getTransactionsByPeriod(selectedPeriod);
@@ -100,28 +104,21 @@ const StatsScreen: React.FC = () => {
     );
   };
 
-  const getPeriodLabel = (period: PeriodType): string => {
-    switch (period) {
-      case 'day': return 'Hari Ini';
-      case 'week': return 'Minggu Ini';
-      case 'month': return 'Bulan Ini';
-      case 'all': return 'Semua Waktu';
-      default: return 'Bulan Ini';
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Header */}
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Statistik</Text>
-          <Text style={styles.headerSubtitle}>Wawasan dan tren keuangan</Text>
+          <Text style={styles.headerTitle}>Statistics</Text>
+          <Text style={styles.headerSubtitle}>Financial insights and trends</Text>
         </View>
 
         {/* Period Filter */}
-        <View style={styles.periodContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.periodSelectorWrapper}>
+          <View style={styles.periodSelector}>
             {periods.map((period) => (
               <TouchableOpacity
                 key={period.key}
@@ -141,14 +138,14 @@ const StatsScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         </View>
 
         {/* Summary Cards */}
         <View style={styles.summaryContainer}>
           <View style={styles.summaryCard}>
             <Icon name="trending-up" size={24} color={COLORS.income} />
-            <Text style={styles.summaryLabel}>Total Pemasukan</Text>
+            <Text style={styles.summaryLabel}>Total Income</Text>
             <Text style={[styles.summaryAmount, { color: COLORS.income }]}>
               {formatCurrency(summary.totalIncome)}
             </Text>
@@ -156,7 +153,7 @@ const StatsScreen: React.FC = () => {
 
           <View style={styles.summaryCard}>
             <Icon name="trending-down" size={24} color={COLORS.expense} />
-            <Text style={styles.summaryLabel}>Total Pengeluaran</Text>
+            <Text style={styles.summaryLabel}>Total Expense</Text>
             <Text style={[styles.summaryAmount, { color: COLORS.expense }]}>
               {formatCurrency(summary.totalExpense)}
             </Text>
@@ -166,7 +163,7 @@ const StatsScreen: React.FC = () => {
         {/* Income by Category */}
         {incomeStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pemasukan per Kategori</Text>
+            <Text style={styles.sectionTitle}>Income by Category</Text>
             <View style={styles.categoryContainer}>
               {incomeStats.map(item => renderCategoryBar(item, 'income'))}
             </View>
@@ -176,7 +173,7 @@ const StatsScreen: React.FC = () => {
         {/* Expenses by Category */}
         {expenseStats.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pengeluaran per Kategori</Text>
+            <Text style={styles.sectionTitle}>Expense by Category</Text>
             <View style={styles.categoryContainer}>
               {expenseStats.map(item => renderCategoryBar(item, 'expense'))}
             </View>
@@ -186,7 +183,7 @@ const StatsScreen: React.FC = () => {
         {/* Monthly Trend */}
         {monthlyTrend.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tren Bulanan</Text>
+            <Text style={styles.sectionTitle}>Monthly Trend</Text>
             <View style={styles.trendContainer}>
               {monthlyTrend.map(([month, data]) => (
                 <View key={month} style={styles.trendItem}>
@@ -229,11 +226,11 @@ const StatsScreen: React.FC = () => {
             <View style={styles.trendLegend}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: COLORS.income }]} />
-                <Text style={styles.legendText}>Pemasukan</Text>
+                <Text style={styles.legendText}>Income</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: COLORS.expense }]} />
-                <Text style={styles.legendText}>Pengeluaran</Text>
+                <Text style={styles.legendText}>Expense</Text>
               </View>
             </View>
           </View>
@@ -242,14 +239,14 @@ const StatsScreen: React.FC = () => {
         {transactions.length === 0 && (
           <View style={styles.emptyContainer}>
             <Icon name="bar-chart" size={64} color={COLORS.textSecondary} />
-            <Text style={styles.emptyTitle}>Tidak ada data untuk ditampilkan</Text>
+            <Text style={styles.emptyTitle}>No data to display</Text>
             <Text style={styles.emptySubtitle}>
-              Tambahkan beberapa transaksi untuk melihat statistik keuangan Anda
+              Add some transactions to see your financial statistics
             </Text>
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -260,11 +257,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingBottom: 90, // Space for bottom navigation
+  },
+  content: {
+    paddingVertical: paddingVertical * 2,
+    paddingHorizontal: paddingHorizontal,
   },
   header: {
-    padding: 20,
-    paddingTop: 40,
+    marginBottom: paddingVertical,
   },
   headerTitle: {
     fontSize: 28,
@@ -276,30 +275,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
   },
-  periodContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 20,
+  periodSelectorWrapper: {
+    backgroundColor: COLORS.background,
+    paddingVertical: 8,
+    paddingHorizontal: paddingHorizontal,
+    marginBottom: 8,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    borderRadius: 8,
+    padding: 4,
   },
   periodButton: {
-    paddingHorizontal: 20,
+    flex: 1,
     paddingVertical: 8,
-    marginRight: 12,
-    borderRadius: 20,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
   },
   periodButtonActive: {
     backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
   },
   periodButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    color: COLORS.text,
   },
   periodButtonTextActive: {
-    color: COLORS.surface,
+    color: COLORS.background,
+    fontWeight: '600',
   },
   summaryContainer: {
     flexDirection: 'row',

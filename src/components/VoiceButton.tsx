@@ -1,141 +1,142 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Animated, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import * as Speech from 'expo-speech';
-import { Audio } from 'expo-av';
-import { COLORS, VOICE_CONFIG } from '../constants';
+import Voice from '@react-native-voice/voice';
+import { COLORS } from '../constants';
+import { requestVoicePermissions } from '../utils/permissions';
 
 interface VoiceButtonProps {
   onVoiceResult: (text: string) => void;
   disabled?: boolean;
 }
 
+const NUM_BARS = 5;
+
 const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = false }) => {
   const [isListening, setIsListening] = useState(false);
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
-  const [countdown, setCountdown] = useState(3);
+  const [hasPermission, setHasPermission] = useState(false);
   const scaleAnim = new Animated.Value(1);
+  const spectrumAnimations = Array.from({ length: NUM_BARS }, () => new Animated.Value(0));
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      const granted = await requestVoicePermissions();
+      setHasPermission(granted);
+    };
+
+    if (Platform.OS !== 'web') {
+      checkPermissions();
+      
+      Voice.onSpeechStart = () => setIsListening(true);
+      Voice.onSpeechEnd = () => setIsListening(false);
+      Voice.onSpeechResults = (e: any) => {
+        if (e.value && e.value[0]) {
+          handleVoiceResult(e.value[0]);
+        }
+      };
+      Voice.onSpeechError = (e: any) => {
+        console.error('Speech recognition error:', e);
+        Alert.alert('Error', 'Failed to recognize speech. Please try again.');
+        setIsListening(false);
+        stopAnimation();
+      };
+    }
+
+    return () => {
+      if (Platform.OS !== 'web') {
+        Voice.destroy().then(Voice.removeAllListeners);
+      }
+      stopAnimation();
+    };
+  }, []);
+
+  const handleVoiceResult = (text: string) => {
+    onVoiceResult(text);
+    setIsListening(false);
+    stopAnimation();
+  };
+
+  const startAnimation = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1.2,
+      useNativeDriver: true,
+    }).start();
+    animateSpectrum();
+  };
+
+  const stopAnimation = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+    spectrumAnimations.forEach(anim => anim.setValue(0));
+  };
+
+  const animateSpectrum = () => {
+    if (!isListening) return;
+
+    const animations = spectrumAnimations.map((anim) => {
+      const randomHeight = Math.random() * 0.8 + 0.2;
+      return Animated.sequence([
+        Animated.timing(anim, {
+          toValue: randomHeight,
+          duration: 200 + Math.random() * 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(anim, {
+          toValue: 0.2,
+          duration: 200 + Math.random() * 300,
+          useNativeDriver: true,
+        }),
+      ]);
+    });
+
+    Animated.parallel(animations).start(() => {
+      if (isListening) {
+        animateSpectrum();
+      }
+    });
+  };
 
   const startListening = async () => {
-    try {
-      // Request permissions
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Izin Diperlukan', 'Mohon berikan izin mikrofon untuk menggunakan input suara.');
+    if (!hasPermission && Platform.OS !== 'web') {
+      const granted = await requestVoicePermissions();
+      if (!granted) {
+        Alert.alert(
+          'Permission Required',
+          'Microphone permission is required to use voice input.',
+          [{ text: 'OK' }]
+        );
         return;
       }
+      setHasPermission(granted);
+    }
 
+    try {
+      if (Platform.OS !== 'web') {
+        await Voice.start('id-ID');
+      }
       setIsListening(true);
-      
-      // Start pulse animation
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 1.2,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-
-      // Configure audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      // Start recording
-      const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(newRecording);
-
-      // Start countdown
-      setCountdown(3);
-      const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval);
-            stopListening();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Auto-stop after 3 seconds of silence
-      const timer = setTimeout(() => {
-        clearInterval(countdownInterval);
-        if (isListening) {
-          stopListening();
-        }
-      }, 3000); // 3 seconds
-      setSilenceTimer(timer);
-
+      startAnimation();
     } catch (error) {
-      console.error('Error starting voice recording:', error);
-      Alert.alert('Kesalahan', 'Gagal memulai perekaman suara. Silakan coba lagi.');
-      setIsListening(false);
+      console.error('Error starting voice recognition:', error);
+      Alert.alert('Error', 'Could not start voice recognition. Please try again.');
     }
   };
 
   const stopListening = async () => {
     try {
+      if (Platform.OS !== 'web') {
+        await Voice.stop();
+      }
       setIsListening(false);
-      scaleAnim.stopAnimation();
-      scaleAnim.setValue(1);
-
-      // Clear silence timer
-      if (silenceTimer) {
-        clearTimeout(silenceTimer);
-        setSilenceTimer(null);
-      }
-
-      if (recording) {
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        setRecording(null);
-
-        // For demo purposes, we'll simulate voice-to-text
-        // In a real app, you would use a speech-to-text service
-        simulateVoiceToText();
-      }
+      stopAnimation();
     } catch (error) {
-      console.error('Error stopping voice recording:', error);
-      Alert.alert('Kesalahan', 'Gagal memproses perekaman suara.');
+      console.error('Error stopping recording:', error);
     }
   };
 
-  const simulateVoiceToText = () => {
-    // This is a simulation. In a real app, you would:
-    // 1. Send the audio file to a speech-to-text service
-    // 2. Get the transcribed text back
-    // 3. Call onVoiceResult with the text
-    
-    const sampleTexts = [
-      'Saya beli kopi 25 ribu',
-      'Bayar bensin 50000',
-      'Terima gaji 5 juta',
-      'Beli makan siang 30 ribu',
-      'Dapat bonus 1 juta',
-    ];
-    
-    const randomText = sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
-    
-    setTimeout(() => {
-      onVoiceResult(randomText);
-    }, 1000);
-  };
-
-  const handlePress = () => {
-    if (disabled) return;
-    
+  const toggleListening = () => {
     if (isListening) {
       stopListening();
     } else {
@@ -145,13 +146,30 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
 
   return (
     <View style={styles.container}>
+      <View style={styles.spectrumContainer}>
+        {spectrumAnimations.map((anim, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.spectrumBar,
+              {
+                transform: [
+                  { scaleY: anim },
+                  { translateY: 20 }, // Offset for bottom alignment
+                ],
+              },
+            ]}
+          />
+        ))}
+      </View>
+
       <TouchableOpacity
         style={[
           styles.button,
           isListening && styles.buttonListening,
           disabled && styles.buttonDisabled,
         ]}
-        onPress={handlePress}
+        onPress={toggleListening}
         disabled={disabled}
       >
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -162,10 +180,10 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
           />
         </Animated.View>
       </TouchableOpacity>
-      
+
       <Text style={styles.instruction}>
         {isListening
-          ? `Mendengarkan... ${countdown}s`
+          ? 'Mendengarkan... Bicara sekarang!'
           : 'Tekan tombol mikrofon dan katakan sesuatu seperti:'
         }
       </Text>
@@ -174,6 +192,15 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({ onVoiceResult, disabled = fal
         <View style={styles.examples}>
           <Text style={styles.exampleText}>"Beli makan siang 25 ribu"</Text>
           <Text style={styles.exampleText}>"Terima gaji 5 juta"</Text>
+          {Platform.OS === 'web' ? (
+            <Text style={styles.infoText}>
+              💡 Voice recognition aktif di browser
+            </Text>
+          ) : (
+            <Text style={styles.infoText}>
+              💡 Demo mode - akan generate contoh transaksi
+            </Text>
+          )}
         </View>
       )}
     </View>
@@ -215,6 +242,28 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontStyle: 'italic',
     marginVertical: 2,
+  },
+  infoText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  spectrumContainer: {
+    flexDirection: 'row',
+    height: 40,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginBottom: 16,
+    opacity: 0.8,
+  },
+  spectrumBar: {
+    width: 4,
+    height: 40,
+    backgroundColor: COLORS.primary,
+    marginHorizontal: 2,
+    borderRadius: 2,
   },
 });
 

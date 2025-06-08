@@ -44,8 +44,8 @@ export const STORAGE_KEYS = {
 
 export const API_CONFIG = {
   GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
-  // Ganti dengan API key Gemini Anda
-  GEMINI_API_KEY: 'AIzaSyBrVS_9XFEykXFA7iydEmZhqNqpXCdAzN8',
+  // API key Gemini yang aktif
+  GEMINI_API_KEY: 'AIzaSyBByL_Cqmb4d_GX1rvM23V9l1c33d4g9AY',
 };
 
 export const VOICE_CONFIG = {

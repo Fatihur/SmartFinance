@@ -9,6 +9,16 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+export const formatCurrencyCompact = (amount: number): string => {
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(1)}M`;
+  }
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)}K`;
+  }
+  return amount.toString();
+};
+
 export const formatDate = (date: Date): string => {
   return new Intl.DateTimeFormat('id-ID', {
     day: '2-digit',

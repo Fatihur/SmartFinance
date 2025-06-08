@@ -8,10 +8,13 @@ import {
   Modal,
   ScrollView,
   Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { ParsedTransaction } from '../types';
-import { formatCurrency } from '../utils';
+import { formatCurrency, formatCurrencyCompact } from '../utils';
 import { COLORS, CATEGORIES } from '../constants';
 
 interface TransactionConfirmationProps {
@@ -21,6 +24,8 @@ interface TransactionConfirmationProps {
   onConfirm: (transaction: ParsedTransaction) => void;
   onCancel: () => void;
 }
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
   visible,
@@ -42,12 +47,12 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
 
   const handleConfirm = () => {
     if (editedTransaction.amount <= 0) {
-      Alert.alert('Jumlah Tidak Valid', 'Mohon masukkan jumlah yang valid lebih dari 0.');
+      Alert.alert('Invalid Amount', 'Please enter a valid amount greater than 0.');
       return;
     }
 
     if (!editedTransaction.description.trim()) {
-      Alert.alert('Deskripsi Kosong', 'Mohon masukkan deskripsi untuk transaksi ini.');
+      Alert.alert('Empty Description', 'Please enter a description for this transaction.');
       return;
     }
 
@@ -67,24 +72,34 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
   return (
     <Modal
       visible={visible}
+      transparent
       animationType="slide"
-      transparent={true}
       onRequestClose={onCancel}
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.overlay}
+      >
         <View style={styles.container}>
+          {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Konfirmasi Transaksi</Text>
+            <Text style={styles.title}>Confirm Transaction</Text>
             <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
               <Icon name="close" size={24} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Original Voice Text */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Input Suara Asli:</Text>
-              <Text style={styles.originalText}>"{originalText}"</Text>
+              <Text style={styles.sectionTitle}>Voice Input:</Text>
+              <View style={styles.originalTextContainer}>
+                <Icon name="mic" size={20} color={COLORS.primary} style={styles.voiceIcon} />
+                <Text style={styles.originalText}>"{originalText}"</Text>
+              </View>
             </View>
 
             {/* Confidence Score */}
@@ -95,101 +110,104 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
                   styles.confidenceBar,
                   { width: `${editedTransaction.confidence * 100}%`, backgroundColor: confidenceColor }
                 ]} />
-                <Text style={styles.confidenceText}>
+                <Text style={[styles.confidenceText, { color: confidenceColor }]}>
                   {Math.round(editedTransaction.confidence * 100)}%
                 </Text>
               </View>
             </View>
 
-            {/* Transaction Type */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Jenis:</Text>
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    editedTransaction.type === 'income' && styles.typeButtonActive,
-                    { borderColor: COLORS.income }
-                  ]}
-                  onPress={() => setEditedTransaction({
-                    ...editedTransaction,
-                    type: 'income',
-                    category: CATEGORIES.INCOME[0]
-                  })}
-                >
-                  <Icon name="trending-up" size={20} color={
-                    editedTransaction.type === 'income' ? COLORS.surface : COLORS.income
-                  } />
-                  <Text style={[
-                    styles.typeButtonText,
-                    editedTransaction.type === 'income' && styles.typeButtonTextActive
-                  ]}>Pemasukan</Text>
-                </TouchableOpacity>
+            {/* Main Form */}
+            <View style={styles.mainForm}>
+              {/* Type Buttons */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Jenis Transaksi:</Text>
+                <View style={styles.typeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      editedTransaction.type === 'income' && styles.typeButtonActive,
+                      { borderColor: COLORS.income }
+                    ]}
+                    onPress={() => setEditedTransaction({
+                      ...editedTransaction,
+                      type: 'income',
+                      category: CATEGORIES.INCOME[0]
+                    })}
+                  >
+                    <Icon name="trending-up" size={20} color={
+                      editedTransaction.type === 'income' ? COLORS.surface : COLORS.income
+                    } />
+                    <Text style={[
+                      styles.typeButtonText,
+                      editedTransaction.type === 'income' && styles.typeButtonTextActive
+                    ]}>Pemasukan</Text>
+                  </TouchableOpacity>
 
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      editedTransaction.type === 'expense' && styles.typeButtonActive,
+                      { borderColor: COLORS.expense }
+                    ]}
+                    onPress={() => setEditedTransaction({
+                      ...editedTransaction,
+                      type: 'expense',
+                      category: CATEGORIES.EXPENSE[0]
+                    })}
+                  >
+                    <Icon name="trending-down" size={20} color={
+                      editedTransaction.type === 'expense' ? COLORS.surface : COLORS.expense
+                    } />
+                    <Text style={[
+                      styles.typeButtonText,
+                      editedTransaction.type === 'expense' && styles.typeButtonTextActive
+                    ]}>Pengeluaran</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Amount Input */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Jumlah:</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  value={editedTransaction.amount.toString()}
+                  onChangeText={(text) => {
+                    const amount = parseFloat(text.replace(/[^0-9.]/g, '')) || 0;
+                    setEditedTransaction({ ...editedTransaction, amount });
+                  }}
+                  keyboardType="numeric"
+                  placeholder="Masukkan jumlah"
+                />
+                <Text style={styles.amountDisplay}>
+                  {formatCurrency(editedTransaction.amount)}
+                </Text>
+              </View>
+
+              {/* Category Selection */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Kategori:</Text>
                 <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    editedTransaction.type === 'expense' && styles.typeButtonActive,
-                    { borderColor: COLORS.expense }
-                  ]}
-                  onPress={() => setEditedTransaction({
-                    ...editedTransaction,
-                    type: 'expense',
-                    category: CATEGORIES.EXPENSE[0]
-                  })}
+                  style={styles.categoryButton}
+                  onPress={() => setShowCategoryPicker(true)}
                 >
-                  <Icon name="trending-down" size={20} color={
-                    editedTransaction.type === 'expense' ? COLORS.surface : COLORS.expense
-                  } />
-                  <Text style={[
-                    styles.typeButtonText,
-                    editedTransaction.type === 'expense' && styles.typeButtonTextActive
-                  ]}>Pengeluaran</Text>
+                  <Text style={styles.categoryButtonText}>{editedTransaction.category}</Text>
+                  <Icon name="keyboard-arrow-down" size={24} color={COLORS.textSecondary} />
                 </TouchableOpacity>
               </View>
-            </View>
 
-            {/* Amount */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Jumlah:</Text>
-              <TextInput
-                style={styles.amountInput}
-                value={editedTransaction.amount.toString()}
-                onChangeText={(text) => {
-                  const amount = parseFloat(text.replace(/[^0-9.]/g, '')) || 0;
-                  setEditedTransaction({ ...editedTransaction, amount });
-                }}
-                keyboardType="numeric"
-                placeholder="Masukkan jumlah"
-              />
-              <Text style={styles.amountDisplay}>
-                {formatCurrency(editedTransaction.amount)}
-              </Text>
-            </View>
-
-            {/* Category */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Kategori:</Text>
-              <TouchableOpacity
-                style={styles.categoryButton}
-                onPress={() => setShowCategoryPicker(true)}
-              >
-                <Text style={styles.categoryButtonText}>{editedTransaction.category}</Text>
-                <Icon name="keyboard-arrow-down" size={24} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Description */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Deskripsi:</Text>
-              <TextInput
-                style={styles.descriptionInput}
-                value={editedTransaction.description}
-                onChangeText={(text) => setEditedTransaction({ ...editedTransaction, description: text })}
-                placeholder="Masukkan deskripsi"
-                multiline
-                numberOfLines={3}
-              />
+              {/* Description Input */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Deskripsi:</Text>
+                <TextInput
+                  style={styles.descriptionInput}
+                  value={editedTransaction.description}
+                  onChangeText={(text) => setEditedTransaction({ ...editedTransaction, description: text })}
+                  placeholder="Masukkan deskripsi transaksi"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
             </View>
           </ScrollView>
 
@@ -202,39 +220,39 @@ const TransactionConfirmation: React.FC<TransactionConfirmationProps> = ({
               <Text style={styles.confirmButtonText}>Konfirmasi</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Category Picker Modal */}
-          <Modal
-            visible={showCategoryPicker}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowCategoryPicker(false)}
-          >
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerContainer}>
-                <Text style={styles.pickerTitle}>Pilih Kategori</Text>
-                <ScrollView>
-                  {categories.map((category) => (
-                    <TouchableOpacity
-                      key={category}
-                      style={styles.categoryOption}
-                      onPress={() => {
-                        setEditedTransaction({ ...editedTransaction, category });
-                        setShowCategoryPicker(false);
-                      }}
-                    >
-                      <Text style={styles.categoryOptionText}>{category}</Text>
-                      {editedTransaction.category === category && (
-                        <Icon name="check" size={20} color={COLORS.primary} />
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            </View>
-          </Modal>
         </View>
-      </View>
+
+        {/* Category Picker Modal */}
+        <Modal
+          visible={showCategoryPicker}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowCategoryPicker(false)}
+        >
+          <View style={styles.pickerOverlay}>
+            <View style={styles.pickerContainer}>
+              <Text style={styles.pickerTitle}>Pilih Kategori</Text>
+              <ScrollView>
+                {categories.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    style={styles.categoryOption}
+                    onPress={() => {
+                      setEditedTransaction({ ...editedTransaction, category });
+                      setShowCategoryPicker(false);
+                    }}
+                  >
+                    <Text style={styles.categoryOptionText}>{category}</Text>
+                    {editedTransaction.category === category && (
+                      <Icon name="check" size={20} color={COLORS.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -244,15 +262,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
-    alignItems: 'center',
   },
   container: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '85%',
-    width: '100%',
-    paddingBottom: 20,
+    maxHeight: SCREEN_HEIGHT * 0.9,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   header: {
     flexDirection: 'row',
@@ -262,51 +279,75 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBorder,
+    backgroundColor: COLORS.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.text,
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    marginRight: -8,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: 20,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: COLORS.text,
+    color: COLORS.textSecondary,
     marginBottom: 8,
   },
+  originalTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+  },
+  voiceIcon: {
+    marginRight: 12,
+  },
   originalText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.text,
     fontStyle: 'italic',
-    backgroundColor: COLORS.background,
-    padding: 12,
-    borderRadius: 8,
   },
   confidenceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   confidenceBar: {
-    height: 8,
-    borderRadius: 4,
+    height: 6,
+    borderRadius: 3,
     flex: 1,
-    backgroundColor: COLORS.border,
   },
   confidenceText: {
-    marginLeft: 12,
-    fontSize: 14,
+    marginLeft: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: COLORS.text,
+  },
+  mainForm: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   typeContainer: {
     flexDirection: 'row',
@@ -317,17 +358,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    padding: 16,
     borderWidth: 2,
-    borderRadius: 8,
-    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    backgroundColor: COLORS.background,
   },
   typeButtonActive: {
     backgroundColor: COLORS.primary,
   },
   typeButtonText: {
     marginLeft: 8,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: COLORS.text,
   },
@@ -337,16 +378,16 @@ const styles = StyleSheet.create({
   amountInput: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
+    marginBottom: 8,
   },
   amountDisplay: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
     color: COLORS.primary,
-    marginTop: 8,
     textAlign: 'center',
   },
   categoryButton: {
@@ -355,22 +396,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: COLORS.background,
   },
   categoryButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.text,
   },
   descriptionInput: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 15,
+    backgroundColor: COLORS.background,
     textAlignVertical: 'top',
+    minHeight: 100,
   },
   actions: {
     flexDirection: 'row',
@@ -379,6 +421,7 @@ const styles = StyleSheet.create({
     gap: 12,
     borderTopWidth: 1,
     borderTopColor: COLORS.cardBorder,
+    backgroundColor: COLORS.surface,
   },
   cancelButton: {
     flex: 1,
